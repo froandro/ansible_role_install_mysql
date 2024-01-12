@@ -1,0 +1,43 @@
+---
+- name: Install "{{ mysql_python_package }}" for Ansible
+  become: true
+  ansible.builtin.apt:
+    name: '{{ mysql_python_package }}'
+    state: "latest"
+    update_cache: true
+
+- name: Root password is present
+  become: true
+  community.mysql.mysql_user:
+    name: "root"
+    password: "{{ mysql_root_password }}"
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+    check_implicit_admin: true
+    login_unix_socket: "/var/run/mysqld/mysqld.sock"
+
+- name: Anonymous users are absent
+  community.mysql.mysql_user:
+    name: ""
+    state: "absent"
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+  when: mysql_remove_anonymous_users
+
+- name: Test database is absent
+  community.mysql.mysql_db:
+    name: "test"
+    state: "absent"
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+  when: mysql_remove_test_database
+
+- name: Remove remote root and change authentication method
+  community.mysql.mysql_query:
+    query:
+      - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1')
+        #      - ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '{{ mysql_root_password }}'
+        #      - FLUSH PRIVILEGES  
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+  when: mysql_remove_remote_root

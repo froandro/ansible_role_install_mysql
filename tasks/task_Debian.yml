@@ -1,0 +1,51 @@
+---
+# tasks file for ansible_role_install_mysql
+#
+
+- name: Update repositories cache and install "{{ mysql_package }}" package
+  become: true
+  ansible.builtin.apt:
+    name: "{{ mysql_package }}"
+    update_cache: true 
+
+- import_tasks: mysql_secure_installation.yml
+  when: mysql_secure_enabled | bool
+  tags:
+    - mysql_secure_installation
+
+- name: Import config file from template
+  become: true
+  ansible.builtin.template:
+    src: "mysqld.j2"
+    dest: "/etc/mysql/mysql.conf.d/mysqld.cnf"
+  notify:
+    - Restart mysql-server 
+
+- name: Enable service 'mysql-server' and ensure it is started
+  become: true
+  ansible.builtin.systemd:
+    name: mysql
+    enabled: true
+    state: started
+
+- name: Create new databases with names "{{ db_name }}" and 
+  # become: true
+  community.mysql.mysql_db:
+    name: "{{ db_name }}"
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+    state: present
+
+- name: Create database user with name "{{ user_db_mysql }}" with privileges
+  # become: true
+  community.mysql.mysql_user:
+    name: "{{ user_db_mysql }}"
+    password: "{{ pass_db_user }}"
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+    priv: "{{ db_name }}.*:{{ grants }}"
+    state: present
+
+
+
+

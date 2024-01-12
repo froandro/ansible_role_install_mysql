@@ -1,0 +1,22 @@
+---
+# defaults file for ansible_role_install_mysql
+
+
+mysql_package: "mysql-server"
+mysql_user: "mysql"
+mysql_bind_address: "0.0.0.0"
+mysql_port: "3306"
+
+#### vars for mysql_secure_installation ####
+mysql_secure_enabled: true
+mysql_remove_remote_root: true
+mysql_remove_anonymous_users: true
+mysql_remove_test_database: true
+
+mysql_root_password: "test"
+mysql_python_package: "python3-pymysql"
+
+db_name: "piwigo"
+user_db_mysql: "piwigouser"
+pass_db_user: "piwigo"
+grants: "ALL,GRANT"
